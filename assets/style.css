@@ -1,0 +1,4 @@
+.turn-grid-highlight .ag-root-wrapper {
+    border: 2px solid blue !important;
+    background-color: rgba(173, 216, 230, 0.2) !important;
+}

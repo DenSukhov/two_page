@@ -1,0 +1,19 @@
+/* Основной селектор для современных браузеров */
+.ag-row:has(.ag-cell[data-col-id='selected'][data-value='true']) .ag-cell:not([data-col-id='selected']) {
+    background-color: #b3d7ff !important;
+    border-top: 1px solid #007bff;
+    border-bottom: 1px solid #007bff;
+    animation: highlight 0.3s ease-in-out;
+}
+/* Альтернативный селектор для старых браузеров */
+.ag-row .ag-cell[data-col-id='selected'][data-value='true'] ~ .ag-cell {
+    background-color: #b3d7ff !important;
+    border-top: 1px solid #007bff;
+    border-bottom: 1px solid #007bff;
+    animation: highlight 0.3s ease-in-out;
+}
+@keyframes highlight {
+    0% { background-color: #ffffff; }
+    50% { background-color: #80bfff; }
+    100% { background-color: #b3d7ff; }
+}
