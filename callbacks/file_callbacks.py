@@ -26,7 +26,7 @@ def register_file_callbacks(app):
         prevent_initial_call=True
     )
     def update_file(contents, filename):
-        logger.info(f"Загружен новый файл через dcc.Upload. Файл: {filename}, Contents: {'не пустой' если contents else 'пустой'}")
+        logger.info(f"Загружен новый файл через dcc.Upload. Файл: {filename}, Contents: {'не пустой' if contents else 'пустой'}")
         if not contents:
             logger.warning("Файл не выбран.")
             return (
