@@ -19,7 +19,7 @@ def create_map_layout():
             style={'width': '100%', 'height': '600px'}
         ),
         html.Div(id='map-notification', className='mt-3'),
-        dcc.Interval(id='map-interval', interval=5000, n_intervals=0'),
+        dcc.Interval(id='map-interval', interval=5000, n_intervals=0),
         html.Div(id='local-storage-debug', style={'margin': '10px', 'color': 'blue'}),
         html.Div(id='map-data-input', style={'display': 'none'})  # Скрытый компонент для данных
     ], className='container', style={'border': '1px solid red'})
