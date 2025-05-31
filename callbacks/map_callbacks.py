@@ -1,51 +1,50 @@
-from dash import Input, Output, clientside_callback
-import dash_bootstrap_components as dbc
+from dash import Input, Output, State, callback, clientside_callback
+from dash.exceptions import PreventUpdate
+from data_processing import DataProcessor
 from config import logger
+import json
+import dash_leaflet as dl
 
 def register_map_callbacks(app):
-    logger.debug("Начало регистрации clientside callback для карты заказов")
-    app.clientside_callback(
+    # Clientside callback для проверки данных в LocalStorage
+    clientside_callback(
         """
-        function(n_intervals) {
-            console.log('Map callback triggered, interval:', n_intervals);
-            console.log('Checking LocalStorage for order-grid data');
-            const data = localStorage.getItem('order-grid-data');
-            if (data) {
-                const parsedData = JSON.parse(data);
-                console.log('Loaded from LocalStorage:', parsedData);
-                return [
-                    parsedData,
-                    {
-                        "props": {
-                            "children": "Данные загружены из LocalStorage (" + parsedData.length + " заказов)",
-                            "color": "success"
-                        },
-                        "type": "Alert",
-                        "namespace": "dash_bootstrap_components"
-                    },
-                    JSON.stringify(parsedData)
-                ];
+        function(n_intervals, existing_data) {
+            if (window.localStorage.getItem('order-data-store')) {
+                const data = JSON.parse(window.localStorage.getItem('order-data-store'));
+                return [data, 'Данные найдены в LocalStorage'];
             }
-            console.log('No data in LocalStorage');
-            return [
-                [],
-                {
-                    "props": {
-                        "children": "Данные отсутствуют в LocalStorage",
-                        "color": "warning"
-                    },
-                    "type": "Alert",
-                    "namespace": "dash_bootstrap_components"
-                },
-                "No data"
-            ];
+            return [null, 'Данные в LocalStorage отсутствуют'];
         }
         """,
         [
-            Output('order-grid', 'rowData'),
-            Output('map-notification', 'children'),
-            Output('local-storage-debug', 'children')
+            Output('map-data-input', 'children'),
+            Output('map-status', 'children')
         ],
-        Input('map-interval', 'n_intervals')
+        [
+            Input('map-interval', 'n_intervals'),
+            Input('order-data-store', 'data')
+        ]
     )
-    logger.debug("Clientside callback для карты заказов успешно зарегистрирован")
+
+    # Callback для обновления маркеров на карте
+    @app.callback(
+        Output('markers', 'children'),
+        Input('map-data-input', 'children'),
+        prevent_initial_call=True
+    )
+    def update_map_markers(map_data):
+        logger.debug(f"Обновление маркеров карты, входные данные: {map_data}")
+        if not map_data:
+            logger.info("Данные для карты отсутствуют.")
+            return []
+
+        try:
+            table_row_data = json.loads(map_data) if isinstance(map_data, str) else map_data
+            grouped_data = DataProcessor.prepare_map_data(table_row_data)
+            markers = [DataProcessor.create_marker(row) for _, row in grouped_data.iterrows()]
+            logger.info(f"Создано {len(markers)} маркеров для карты.")
+            return markers
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении карты: {str(e)}")
+            return []
