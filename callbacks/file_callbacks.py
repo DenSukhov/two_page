@@ -11,6 +11,7 @@ def register_file_callbacks(app):
             Output("data-store", "data"),
             Output("turn-store", "data"),
             Output("shift-store", "data"),
+            Output("order-data-store", "data"),  # Добавлено для сохранения данных
             Output("grid", "columnDefs"),
             Output("grid", "rowData"),
             Output("turn-grid", "columnDefs"),
@@ -38,6 +39,7 @@ def register_file_callbacks(app):
                 dash.no_update,
                 dash.no_update,
                 dash.no_update,
+                dash.no_update,
                 dbc.Alert("Файл не выбран.", color="warning", className="mt-3"),
                 "Ожидание загрузки файла..."
             )
@@ -55,17 +57,19 @@ def register_file_callbacks(app):
                 dash.no_update,
                 dash.no_update,
                 dash.no_update,
+                dash.no_update,
                 dbc.Alert(error, color="danger", className="mt-3"),
                 "Ошибка при загрузке файла"
             )
 
         new_column_defs = [{"field": col} for col in df.columns if col != 'row_id']
         new_row_data = df.to_dict("records")
-        logger.info(f"Новый файл успешно загружен: {len(new_row_data)} строк, только основная таблица обновлена.")
+        logger.info(f"Новый файл успешно загружен: {len(new_row_data)} строк, обновлены data-store и order-data-store.")
         return (
             new_row_data,
             dash.no_update,
             dash.no_update,
+            new_row_data,  # Сохранение в order-data-store
             new_column_defs,
             new_row_data,
             new_column_defs,

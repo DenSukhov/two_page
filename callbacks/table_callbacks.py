@@ -7,13 +7,12 @@ def register_table_callbacks(app):
     # Clientside callback для управления LocalStorage
     app.clientside_callback(
         """
-        function(gridVirtualRowData, turnVirtualRowData, gridRowData, turnRowData, activeTable, uploadContents, uploadClicks, transferClicks, shiftClicks, gridClicks, turnClicks) {
+        function(gridVirtualRowData, turnVirtualRowData, gridRowData, turnRowData, activeTable, uploadContents, uploadClicks, transferClicks, shiftClicks, gridClicks, turnClicks, orderDataStore) {
             console.log('Clientside callback triggered');
             console.log('Active table:', activeTable);
             console.log('Grid virtualRowData:', gridVirtualRowData ? gridVirtualRowData.length : 'null', 'Grid rowData:', gridRowData ? gridRowData.length : 'null');
             console.log('Turn virtualRowData:', turnVirtualRowData ? turnVirtualRowData.length : 'null', 'Turn rowData:', turnRowData ? turnRowData.length : 'null');
-            console.log('Upload contents:', uploadContents ? 'present' : 'null', 'Upload clicks:', uploadClicks);
-            console.log('Transfer clicks:', transferClicks, 'Shift clicks:', shiftClicks);
+            console.log('Order data store:', orderDataStore ? orderDataStore.length : 'null');
 
             // Очистка LocalStorage при загрузке нового файла
             if (uploadContents && uploadClicks && window.lastUploadClicks !== uploadClicks) {
@@ -78,13 +77,20 @@ def register_table_callbacks(app):
                             resolve(null);
                             return;
                         }
+                        // Получаем номера заказов
                         const orders = dataToSave
                             .filter(row => row && row['Заказ'])
                             .map(row => row['Заказ']);
                         console.log('Orders found in', tableId, ':', orders.length);
-                        const orderData = orders.map(order => ({ Заказы: order }));
-                        localStorage.setItem('order-grid-data', JSON.stringify(orderData));
-                        console.log('Saved to LocalStorage:', orderData);
+                        // Сопоставляем с order-data-store
+                        console.log('Order data store content:', orderDataStore);
+                        const fullData = orderDataStore && orders.length > 0
+                            ? orderDataStore.filter(row => row && row['Заказ'] && orders.includes(row['Заказ']))
+                            : [];
+                        console.log('Full data to save:', fullData.length);
+                        console.log('Full data content:', fullData);
+                        localStorage.setItem('order-grid-data', JSON.stringify(fullData));
+                        console.log('Saved to LocalStorage:', fullData);
                         resolve(null);
                     }
                 }, 300);
@@ -103,7 +109,8 @@ def register_table_callbacks(app):
             Input("transfer-button", "n_clicks"),
             Input("add-shift-button", "n_clicks"),
             Input("grid", "cellClicked"),
-            Input("turn-grid", "cellClicked")
+            Input("turn-grid", "cellClicked"),
+            Input("order-data-store", "data")
         ],
         prevent_initial_call=True
     )

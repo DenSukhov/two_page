@@ -7,7 +7,7 @@ def create_layout():
     logger.debug("Создание макета для дашборда")
     layout = html.Div([
         html.H2("Дашборд", className="mt-3"),
-        html.A("Открыть карту заказов", href="http://127.0.0.1:8050/map", target="_blank", className="mt-3", style={'display': 'block', 'color': 'blue'}),
+        html.A("Открыть карту заказов", href="/map", target="_blank", className="mt-3", style={'display': 'block', 'color': 'blue'}),
         html.Div("Дашборд загружен", style={'color': 'blue'}),
         html.Div("Ожидание загрузки файла...", id="dashboard-status", className="mt-3"),
         dcc.Upload(
@@ -72,6 +72,7 @@ def create_layout():
         dcc.Store(id='data-store'),
         dcc.Store(id='turn-store'),
         dcc.Store(id='shift-store'),
+        dcc.Store(id='order-data-store'),
         dcc.Store(id='active-table-store', data='grid'),
         html.Div(id='local-storage-clear', style={'display': 'none'})
     ], className='container', style={'border': '1px solid red'})
