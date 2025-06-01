@@ -11,7 +11,7 @@ def register_file_callbacks(app):
             Output("data-store", "data"),
             Output("turn-store", "data"),
             Output("shift-store", "data"),
-            Output("order-data-store", "data"),  # Добавлено для сохранения данных
+            Output("order-data-store", "data"),
             Output("grid", "columnDefs"),
             Output("grid", "rowData"),
             Output("turn-grid", "columnDefs"),
@@ -30,57 +30,52 @@ def register_file_callbacks(app):
         if not contents:
             logger.warning("Файл не выбран.")
             return (
-                dash.no_update, dash.no_update, dash.no_update, dash.no_update,
-                dash.no_update, dash.no_update, dash.no_update,
-                True, True, True,
-                dbc.Alert("Файл не выбран.", color="warning", dismissable=True),
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dbc.Alert("Файл не выбран.", color="warning", className="mt-3"),
                 "Ожидание загрузки файла..."
             )
 
         df, error = DataProcessor.load_excel_file(contents, filename)
-        if error:
-            logger.error(f"Ошибка загрузки файла: {error}")
+        if df is None:
+            logger.error(f"Ошибка загрузки: {error}")
             return (
-                dash.no_update, dash.no_update, dash.no_update, dash.no_update,
-                dash.no_update, dash.no_update, dash.no_update,
-                True, True, True,
-                dbc.Alert(error, color="danger", dismissable=True),
-                "Ошибка при загрузке файла."
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dbc.Alert(error, color="danger", className="mt-3"),
+                "Ошибка при загрузке файла"
             )
 
-        logger.info(f"Файл успешно загружен: {filename}, строк: {len(df)}")
-        columns = [{"headerName": col, "field": col} for col in df.columns]
-        row_data = df.to_dict("records")
-        turn_columns = [
-            {"headerName": "Заказ", "field": "Заказ"},
-            {"headerName": "Товар", "field": "Товар"},
-            {"headerName": "Пал", "field": "Пал"},
-            {"headerName": "КГ", "field": "КГ"}
-        ]
-        data_store = row_data
-        turn_store = [{"shift_id": 1000, "rows": []}]
-        shift_store = [{
-            "shift_id": 1000,
-            "max_ts": 38,
-            "col_pal": 0.0,
-            "col_kg": 0.00,
-            "head": "",
-            "trailer": "",
-            "comments": ""
-        }]
-        order_data_store = row_data  # Сохраняем данные в order-data-store
-
+        new_column_defs = [{"field": col} for col in df.columns if col != 'row_id']  # Исключен row_id
+        new_row_data = df.to_dict("records")
+        logger.info(f"Новый файл успешно загружен: {len(new_row_data)} строк, обновлены data-store и order-data-store.")
         return (
-            data_store,
-            turn_store,
-            shift_store,
-            order_data_store,
-            columns,
-            row_data,
-            turn_columns,
+            new_row_data,
+            dash.no_update,
+            dash.no_update,
+            new_row_data,
+            new_column_defs,
+            new_row_data,
+            new_column_defs,
             False,
             False,
             False,
-            dbc.Alert(f"Файл {filename} успешно загружен.", color="success", dismissable=True),
-            f"Файл загружен: {filename}"
+            dbc.Alert(f"Файл {filename} успешно загружен.", color="success", className="mt-3"),
+            f"Файл {filename} загружен ({len(new_row_data)} строк)"
         )
