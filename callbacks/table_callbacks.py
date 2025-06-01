@@ -110,7 +110,7 @@ def register_table_callbacks(app):
             Input("add-shift-button", "n_clicks"),
             Input("grid", "cellClicked"),
             Input("turn-grid", "cellClicked"),
-            Input("order-data-store", "data")  # Восстановлен
+            Input("order-data-store", "data")
         ],
         prevent_initial_call=True
     )

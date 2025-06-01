@@ -72,7 +72,7 @@ def create_layout():
         dcc.Store(id='data-store'),
         dcc.Store(id='turn-store'),
         dcc.Store(id='shift-store'),
-        dcc.Store(id='order-data-store'),  # Добавлен для соответствия эталону
+        dcc.Store(id='order-data-store'),
         dcc.Store(id='active-table-store', data='grid'),
         html.Div(id='local-storage-clear', style={'display': 'none'})
     ], className='container', style={'border': '1px solid red'})
