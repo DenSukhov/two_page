@@ -1,5 +1,5 @@
 from dash import Input, Output, clientside_callback
-from data_processing import DataProcessor
+from processing.map_processing import MapProcessor
 from config import logger
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -48,12 +48,12 @@ def register_map_callbacks(app):
                     "No data"
                 )
 
-            logger.debug(f"Данные из LocalStorage: {data[:100]}...")  # Логируем начало данных
+            logger.debug(f"Данные из LocalStorage: {data[:100]}...")
             parsed_data = json.loads(data)
             logger.debug(f"Загружено из LocalStorage: {len(parsed_data)} записей")
 
             # Подготовка данных для карты
-            map_data = DataProcessor.prepare_map_data(parsed_data)
+            map_data = MapProcessor.prepare_map_data(parsed_data)
             if map_data.empty:
                 logger.info("Нет данных для отображения на карте")
                 return (
@@ -71,7 +71,7 @@ def register_map_callbacks(app):
             logger.debug(f"Центр карты: {center}")
 
             # Создание маркеров
-            markers = [DataProcessor.create_marker(row) for _, row in map_data.iterrows()]
+            markers = [MapProcessor.create_marker(row) for _, row in map_data.iterrows()]
             logger.debug(f"Создано {len(markers)} маркеров")
             return (
                 center,

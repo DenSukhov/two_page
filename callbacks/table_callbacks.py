@@ -1,7 +1,7 @@
 from dash import Input, Output, State, clientside_callback
 import dash
 from config import logger
-from data_processing import DataProcessor
+from processing.table_processing import TableProcessor
 
 def register_table_callbacks(app):
     # Clientside callback для управления LocalStorage
@@ -155,7 +155,7 @@ def register_table_callbacks(app):
     )
     def filter_table(search_value, original_data):
         logger.info("Выполняется фильтрация таблицы по запросу")
-        return DataProcessor.filter_data(original_data, search_value)
+        return TableProcessor.filter_data(original_data, search_value)
 
     # Callback для сброса фильтров
     @app.callback(

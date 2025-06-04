@@ -1,12 +1,11 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from layout import create_layout
-from map_layout import create_map_layout
-from register_callbacks import register_callbacks
+from layouts.factory import get_layout
+from callbacks.base import register_callbacks
 from config import logger
 
-# Инициализация Dash-приложения (единственный экземпляр)
+# Инициализация Dash-приложения
 app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Корневой макет
@@ -21,7 +20,7 @@ logger.info("Регистрация страницы дашборда")
 dash.register_page(
     "dashboard",
     path='/',
-    layout=create_layout,
+    layout=get_layout('dashboard'),
     name="Дашборд"
 )
 
@@ -29,7 +28,7 @@ logger.info("Регистрация страницы карты заказов")
 dash.register_page(
     "map",
     path='/map',
-    layout=create_map_layout,
+    layout=get_layout('map'),
     name="Карта заказов"
 )
 
@@ -50,11 +49,11 @@ def debug_page(pathname):
 def render_page_content(pathname):
     logger.info(f"Рендеринг страницы: {pathname}")
     if pathname == '/':
-        layout = create_layout()
+        layout = get_layout('dashboard')
         logger.debug(f"Макет для /: {type(layout).__name__}")
         return layout
     elif pathname == '/map':
-        layout = create_map_layout()
+        layout = get_layout('map')
         logger.debug(f"Макет для /map: {type(layout).__name__}")
         return layout
     logger.warning(f"Страница не найдена: {pathname}")
