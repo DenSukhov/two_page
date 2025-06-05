@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import List, Dict, Tuple
-from config import logger
+from config import logger, next_shift_id
 
 class TableProcessor:
     @staticmethod
