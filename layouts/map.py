@@ -2,7 +2,7 @@ from dash import html, dcc
 import dash_leaflet as dl
 from config import logger
 
-def create_map_layout():
+def create_layout():
     logger.debug("Начало создания макета для страницы карты заказов")
     layout = html.Div([
         html.H1("Карта заказов", className="mt-3"),
@@ -21,7 +21,7 @@ def create_map_layout():
         html.Div(id='map-notification', className='mt-3'),
         dcc.Interval(id='map-interval', interval=5000, n_intervals=0),
         html.Div(id='local-storage-debug', style={'margin': '10px', 'color': 'blue'}),
-        html.Div(id='map-data-input', style={'display': 'none'})  # Скрытый компонент для данных
+        html.Div(id='map-data-input', style={'display': 'none'})
     ], className='container', style={'border': '1px solid red'})
     logger.debug("Макет карты заказов успешно создан")
     return layout

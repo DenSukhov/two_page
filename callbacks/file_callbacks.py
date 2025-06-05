@@ -1,5 +1,5 @@
 from dash import Input, Output, State
-from data_processing import DataProcessor
+from processing.file_processing import FileProcessor
 from config import logger
 import dash
 import dash_bootstrap_components as dbc
@@ -11,7 +11,7 @@ def register_file_callbacks(app):
             Output("data-store", "data"),
             Output("turn-store", "data"),
             Output("shift-store", "data"),
-            Output("order-data-store", "data"),  # Добавлено для сохранения данных
+            Output("order-data-store", "data"),
             Output("grid", "columnDefs"),
             Output("grid", "rowData"),
             Output("turn-grid", "columnDefs"),
@@ -44,7 +44,7 @@ def register_file_callbacks(app):
                 "Ожидание загрузки файла..."
             )
 
-        df, error = DataProcessor.load_excel_file(contents, filename)
+        df, error = FileProcessor.load_excel_file(contents, filename)
         if df is None:
             logger.error(f"Ошибка загрузки: {error}")
             return (
@@ -69,7 +69,7 @@ def register_file_callbacks(app):
             new_row_data,
             dash.no_update,
             dash.no_update,
-            new_row_data,  # Сохранение в order-data-store
+            new_row_data,
             new_column_defs,
             new_row_data,
             new_column_defs,

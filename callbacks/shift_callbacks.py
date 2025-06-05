@@ -1,7 +1,7 @@
 from dash import Input, Output, State
 import dash
 from config import logger
-from data_processing import DataProcessor
+from processing.table_processing import TableProcessor
 import dash_bootstrap_components as dbc
 
 def register_shift_callbacks(app):
@@ -28,7 +28,7 @@ def register_shift_callbacks(app):
         logger.debug(f"shift_store: {shift_store}, turn_store: {turn_store}")
 
         try:
-            new_shift_store, new_turn_store, message = DataProcessor.create_shift(shift_store, turn_store)
+            new_shift_store, new_turn_store, message = TableProcessor.create_shift(shift_store, turn_store)
             logger.info(f"Смена создана успешно: {message}")
             return (
                 new_shift_store,
@@ -109,7 +109,7 @@ def register_shift_callbacks(app):
 
         shift_id = shift_selected_rows[0]["shift_id"]
         turn_store = [] if turn_store is None or not isinstance(turn_store, list) else turn_store
-        new_data_store, new_turn_store, updated_rows = DataProcessor.transfer_rows(data_store, turn_store, grid_selected_rows, shift_id)
+        new_data_store, new_turn_store, updated_rows = TableProcessor.transfer_rows(data_store, turn_store, grid_selected_rows, shift_id)
         return (
             new_data_store,
             new_turn_store,
@@ -130,6 +130,6 @@ def register_shift_callbacks(app):
     )
     def update_shift_store(cell_changed, shift_store):
         shift_store = [] if shift_store is None or not isinstance(shift_store, list) else shift_store
-        new_shift_store, message = DataProcessor.update_shift(shift_store, cell_changed)
+        new_shift_store, message = TableProcessor.update_shift(shift_store, cell_changed)
         color = "success" if "Обновлена смена" in message else "danger"
         return new_shift_store, dbc.Alert(message, color=color, className="mt-3")
