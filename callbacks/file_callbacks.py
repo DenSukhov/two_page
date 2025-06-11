@@ -1,81 +1,55 @@
-from dash import Input, Output, State
+from dash import Input, Output, State, exceptions
+import pandas as pd  # Добавлен импорт pandas
 from processing.file_processing import FileProcessor
 from config import logger
 import dash
 import dash_bootstrap_components as dbc
 
 def register_file_callbacks(app):
-    # Callback для загрузки нового файла
+    # Callback для обработки загруженного файла
     @app.callback(
-        [
-            Output("data-store", "data"),
-            Output("turn-store", "data"),
-            Output("shift-store", "data"),
-            Output("order-data-store", "data"),
-            Output("grid", "columnDefs"),
-            Output("grid", "rowData"),
-            Output("turn-grid", "columnDefs"),
-            Output("search-input", "disabled"),
-            Output("reset-button", "disabled"),
-            Output("transfer-button", "disabled"),
-            Output("notification-output", "children"),
-            Output("dashboard-status", "children")
-        ],
+        [Output("data-store", "data"), Output("order-data-store", "data")],
         Input("upload-data", "contents"),
         State("upload-data", "filename"),
         prevent_initial_call=True
     )
-    def update_file(contents, filename):
-        logger.info(f"Загружен новый файл через dcc.Upload. Файл: {filename}, Contents: {'не пустой' if contents else 'пустой'}")
+    def process_file(contents, filename):
+        logger.info(f"Загружен новый файл через dcc.Upload. Файл: {filename}")
         if not contents:
             logger.warning("Файл не выбран.")
-            return (
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dbc.Alert("Файл не выбран.", color="warning", className="mt-3"),
-                "Ожидание загрузки файла..."
-            )
+            raise exceptions.PreventUpdate("Файл не выбран.")
 
         df, error = FileProcessor.load_excel_file(contents, filename)
         if df is None:
             logger.error(f"Ошибка загрузки: {error}")
-            return (
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-                dbc.Alert(error, color="danger", className="mt-3"),
-                "Ошибка при загрузке файла"
-            )
+            raise exceptions.PreventUpdate(error)
 
-        new_column_defs = [{"field": col} for col in df.columns if col != 'row_id']
-        new_row_data = df.to_dict("records")
-        logger.info(f"Новый файл успешно загружен: {len(new_row_data)} строк, обновлены data-store и order-data-store.")
+        data = df.to_dict("records")
+        logger.info(f"Новый файл успешно загружен: {len(data)} строк.")
+        return data, data
+
+    # Callback для обновления таблиц и интерфейса
+    @app.callback(
+        [Output("grid", "columnDefs"), Output("grid", "rowData"),
+         Output("turn-grid", "columnDefs"), Output("turn-grid", "rowData"),
+         Output("search-input", "disabled"), Output("reset-button", "disabled"),
+         Output("transfer-button", "disabled"), Output("notification-output", "children"),
+         Output("dashboard-status", "children")],
+        Input("data-store", "data"),
+        prevent_initial_call=True
+    )
+    def update_grids_and_ui(data):
+        if not data:
+            logger.warning("Данные отсутствуют для обновления таблиц.")
+            return ([], [], [], [], True, True, True, dbc.Alert("Данные отсутствуют.", color="warning"), "Ожидание загрузки файла...")
+
+        new_column_defs = [{"field": col} for col in pd.DataFrame(data).columns if col != 'row_id']
+        new_row_data = data
+        logger.info(f"Обновлены таблицы с {len(new_row_data)} строками.")
         return (
-            new_row_data,
-            dash.no_update,
-            dash.no_update,
-            new_row_data,
-            new_column_defs,
-            new_row_data,
-            new_column_defs,
-            False,
-            False,
-            False,
-            dbc.Alert(f"Файл {filename} успешно загружен.", color="success", className="mt-3"),
-            f"Файл {filename} загружен ({len(new_row_data)} строк)"
+            new_column_defs, new_row_data,
+            new_column_defs, new_row_data,
+            False, False, False,
+            dbc.Alert(f"Файл успешно загружен.", color="success"),
+            f"Файл загружен ({len(new_row_data)} строк)"
         )
