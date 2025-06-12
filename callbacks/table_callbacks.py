@@ -146,60 +146,46 @@ def register_table_callbacks(app):
         
         return dash.no_update
 
-    # Клиентский callback для глобального поиска
+    # Объединенный клиентский callback для глобального поиска и сброса фильтров
     clientside_callback(
         """
-        function(searchValue, activeTable, gridRowData, turnRowData) {
-            console.log('Global search triggered with value:', searchValue, 'for table:', activeTable);
-            const api = window.dash_ag_grid.getApi(activeTable === 'turn-grid' ? 'turn-grid' : 'grid');
-            if (!api || !searchValue) {
-                return window.dash_clientside.no_update;
-            }
-
-            const filterValue = searchValue.toLowerCase();
-            const rowData = activeTable === 'turn-grid' ? turnRowData : gridRowData;
-            if (!rowData || rowData.length === 0) {
-                return window.dash_clientside.no_update;
-            }
-
-            const filteredData = rowData.filter(row => {
-                return Object.values(row).some(value => 
-                    value && value.toString().toLowerCase().includes(filterValue)
-                );
-            });
-            api.setRowData(filteredData);
-            return filteredData;
-        }
-        """,
-        Output('grid', 'rowData'),
-        Input('search-input', 'value'),
-        State('active-table-store', 'data'),
-        State('grid', 'rowData'),
-        State('turn-grid', 'rowData'),
-        prevent_initial_call=True
-    )
-
-    # Клиентский callback для сброса фильтров
-    clientside_callback(
-        """
-        function(n_clicks, activeTable, gridRowData, turnRowData) {
-            if (!n_clicks) {
-                return window.dash_clientside.no_update;
-            }
-            console.log('Reset filters triggered for table:', activeTable);
+        function(searchValue, n_clicks, activeTable, gridRowData, turnRowData) {
+            console.log('Combined callback triggered with searchValue:', searchValue, 'n_clicks:', n_clicks, 'for table:', activeTable);
             const api = window.dash_ag_grid.getApi(activeTable === 'turn-grid' ? 'turn-grid' : 'grid');
             if (!api) {
                 return window.dash_clientside.no_update;
             }
 
             const originalData = activeTable === 'turn-grid' ? turnRowData : gridRowData;
-            api.setRowData(originalData);
-            api.setFilterModel(null);
-            document.getElementById('search-input').value = '';
-            return originalData;
+            if (!originalData || originalData.length === 0) {
+                return window.dash_clientside.no_update;
+            }
+
+            let resultData = [...originalData];
+
+            // Глобальный поиск
+            if (searchValue) {
+                const filterValue = searchValue.toLowerCase();
+                resultData = originalData.filter(row => {
+                    return Object.values(row).some(value => 
+                        value && value.toString().toLowerCase().includes(filterValue)
+                    );
+                });
+            }
+
+            // Сброс фильтров
+            if (n_clicks) {
+                resultData = [...originalData];
+                api.setFilterModel(null);
+                document.getElementById('search-input').value = '';
+            }
+
+            api.setRowData(resultData);
+            return resultData;
         }
         """,
         Output('grid', 'rowData'),
+        Input('search-input', 'value'),
         Input('reset-filters-button', 'n_clicks'),
         State('active-table-store', 'data'),
         State('grid', 'rowData'),
