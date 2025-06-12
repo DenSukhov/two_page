@@ -21,15 +21,14 @@ def create_layout():
             type="circle",
             children=html.Div(id='notification-output', className='mt-3')
         ),
-        dcc.Input(
+        dbc.Input(
             id='search-input',
             type='text',
-            placeholder='Поиск...',
-            className='form-control mt-3',
-            disabled=True,
+            placeholder='Поиск по всем столбцам...',
+            className='form-control mt-3 mb-2',
             style={'width': '300px'}
         ),
-        dbc.Button('Сбросить фильтры', id='reset-button', color='secondary', className='mt-3 me-2', disabled=True),
+        dbc.Button('Сброс фильтров', id='reset-filters-button', color='secondary', className='mt-3 mb-2'),
         dbc.Button('Перенести в Turn', id='transfer-button', color='success', className='mt-3 me-2', disabled=True),
         dbc.Button('Смена +', id='add-shift-button', color='info', className='mt-3'),
         dag.AgGrid(

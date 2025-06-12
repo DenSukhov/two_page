@@ -146,28 +146,63 @@ def register_table_callbacks(app):
         
         return dash.no_update
 
-    # Callback для поиска
-    @app.callback(
-        Output("grid", "rowData", allow_duplicate=True),
-        Input("search-input", "value"),
-        State("data-store", "data"),
-        prevent_initial_call=True
-    )
-    def filter_table(search_value, original_data):
-        logger.info("Выполняется фильтрация таблицы по запросу")
-        return TableProcessor.filter_data(original_data, search_value)
+    # Клиентский callback для глобального поиска
+    clientside_callback(
+        """
+        function(searchValue, activeTable, gridRowData, turnRowData) {
+            console.log('Global search triggered with value:', searchValue, 'for table:', activeTable);
+            const api = window.dash_ag_grid.getApi(activeTable === 'turn-grid' ? 'turn-grid' : 'grid');
+            if (!api || !searchValue) {
+                return window.dash_clientside.no_update;
+            }
 
-    # Callback для сброса фильтров
-    @app.callback(
-        [
-            Output("grid", "rowData", allow_duplicate=True),
-            Output("grid", "filterModel"),
-            Output("search-input", "value")
-        ],
-        Input("reset-button", "n_clicks"),
-        State("data-store", "data"),
+            const filterValue = searchValue.toLowerCase();
+            const rowData = activeTable === 'turn-grid' ? turnRowData : gridRowData;
+            if (!rowData || rowData.length === 0) {
+                return window.dash_clientside.no_update;
+            }
+
+            const filteredData = rowData.filter(row => {
+                return Object.values(row).some(value => 
+                    value && value.toString().toLowerCase().includes(filterValue)
+                );
+            });
+            api.setRowData(filteredData);
+            return filteredData;
+        }
+        """,
+        Output('grid', 'rowData'),
+        Input('search-input', 'value'),
+        State('active-table-store', 'data'),
+        State('grid', 'rowData'),
+        State('turn-grid', 'rowData'),
         prevent_initial_call=True
     )
-    def reset_filters(n_clicks, original_data):
-        logger.info("Нажата кнопка 'Сбросить фильтры'.")
-        return original_data, {}, ""
+
+    # Клиентский callback для сброса фильтров
+    clientside_callback(
+        """
+        function(n_clicks, activeTable, gridRowData, turnRowData) {
+            if (!n_clicks) {
+                return window.dash_clientside.no_update;
+            }
+            console.log('Reset filters triggered for table:', activeTable);
+            const api = window.dash_ag_grid.getApi(activeTable === 'turn-grid' ? 'turn-grid' : 'grid');
+            if (!api) {
+                return window.dash_clientside.no_update;
+            }
+
+            const originalData = activeTable === 'turn-grid' ? turnRowData : gridRowData;
+            api.setRowData(originalData);
+            api.setFilterModel(null);
+            document.getElementById('search-input').value = '';
+            return originalData;
+        }
+        """,
+        Output('grid', 'rowData'),
+        Input('reset-filters-button', 'n_clicks'),
+        State('active-table-store', 'data'),
+        State('grid', 'rowData'),
+        State('turn-grid', 'rowData'),
+        prevent_initial_call=True
+    )
